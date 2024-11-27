@@ -19,8 +19,9 @@ CLIENT_FILES = $(addprefix $(SRCS_DIR), $(CLIENT_SRCS))
 SERVER_OBJS = $(SERVER_FILES:.c=.o)
 CLIENT_OBJS = $(CLIENT_FILES:.c=.o)
 
-
 all : $(NAME_SERVER) $(NAME_CLIENT)
+
+bonus : all
 
 $(PRINTF_NAME) :
 	$(MAKE) -C $(FT_PRINTF_PATH) bonus
