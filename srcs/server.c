@@ -6,11 +6,11 @@
 /*   By: gakarbou <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/25 18:03:07 by gakarbou          #+#    #+#             */
-/*   Updated: 2024/11/26 00:37:36 by gakarbou         ###   ########.fr       */
+/*   Updated: 2024/11/27 19:09:03 by gakarbou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "server.h"
+#include "minitalk.h"
 
 void	ft_repeat_char(char c, int times)
 {
@@ -34,21 +34,24 @@ void	ft_check_addr(void *addr)
 		return ;
 }
 
-void	ft_interpret(int signum, siginfo_t *a, void *truc)
+void	ft_interpret(int signum, siginfo_t *infos, void *truc)
 {
 	static char		saw = 0;
 	static char		addr = 0;
 
 	(void)truc;
-	(void)a;
 	if (signum == SIGUSR2)
 		addr |= 1 << saw;
 	saw++;
 	if (saw == 8)
 	{
 		write(1, &addr, 1);
+		if (addr == '\n')
+			write(1, "   ", 3);
 		if (!addr)
 			write(1, "\n>> ", 4);
+		if (!addr)
+			kill(infos->si_pid, SIGUSR1);
 		saw = 0;
 		addr = 0;
 	}
@@ -78,7 +81,8 @@ void	super_header(int pid)
 	ft_printf("PID = %d\n", pid);
 }
 
-void	ft_interpret(int signum, siginfo_t *, void *truc);
+void	ft_interpret(int signum, siginfo_t *infos, void *truc);
+
 int	main(void)
 {
 	struct sigaction	action;
@@ -86,7 +90,7 @@ int	main(void)
 
 	pid = getpid();
 	super_header(pid);
-	action.sa_flags = 0;
+	action.sa_flags = SA_SIGINFO;
 	action.sa_sigaction = &ft_interpret;
 	sigemptyset(&action.sa_mask);
 	sigaction(SIGUSR1, &action, NULL);

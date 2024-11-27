@@ -6,14 +6,11 @@
 /*   By: gakarbou <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/25 19:04:05 by gakarbou          #+#    #+#             */
-/*   Updated: 2024/11/26 00:34:50 by gakarbou         ###   ########.fr       */
+/*   Updated: 2024/11/27 19:08:37 by gakarbou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <stdio.h>
-#include <signal.h>
-#include <unistd.h>
-#include <stdlib.h>
+#include "minitalk.h"
 
 /*
 int	ft_strlen(char *str)
@@ -52,21 +49,15 @@ void	send_addr(int pid, char *str, int len)
 }
 */
 
-int	ft_atoi(char *str)
+void	send_msg(int signum, siginfo_t *infos, void *truc)
 {
-	int	sign;
-	int	nb;
-
-	nb = 0;
-	sign = 1;
-	while (*str == 32 || (*str >= 9 && *str <= 13))
-		str++;
-	if (*str == '-' || *str == '+')
-		if (*(str++) == '-')
-			sign = -1;
-	while (*str >= '0' && *str <= '9')
-		nb = nb * 10 + (*(str++) - '0');
-	return (nb * sign);
+	(void)truc;
+	(void)infos;
+	if (signum == SIGUSR1)
+		ft_printf("Message envoye!\n");
+	else
+		ft_printf("Erreur!\n");
+	exit(0);
 }
 
 void	send_character(int pid, char c)
@@ -81,20 +72,29 @@ void	send_character(int pid, char c)
 		else
 			kill(pid, SIGUSR1);
 		c = c >> 1;
-		usleep(400);
+		usleep(90);
 	}
 }
 
+void	send_msg(int signum, siginfo_t *infos, void *truc);
+
 int	main(int argc, char **argv)
 {
-	int	i;
-	int	pid;
+	int					i;
+	int					serv_pid;
+	struct sigaction	action;
 
 	if (argc != 3)
 		exit(1);
+	action.sa_flags = 0;
+	action.sa_sigaction = &send_msg;
+	sigemptyset(&action.sa_mask);
+	sigaction(SIGUSR1, &action, NULL);
+	sigaction(SIGUSR2, &action, NULL);
 	i = -1;
-	pid = ft_atoi(argv[1]);
+	serv_pid = ft_atoi(argv[1]);
 	while (argv[2][++i])
-		send_character(pid, argv[2][i]);
-	send_character(pid, argv[2][i]);
+		send_character(serv_pid, argv[2][i]);
+	send_character(serv_pid, argv[2][i]);
+	send_msg(SIGUSR2, 0, 0);
 }
